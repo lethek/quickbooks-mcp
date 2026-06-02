@@ -759,6 +759,10 @@ export const toolDefinitions = [
                 type: "string",
                 description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes.",
               },
+              service_date: {
+                type: "string",
+                description: "Service date for this line in YYYY-MM-DD format (optional).",
+              },
               delete: {
                 type: "boolean",
                 description: "Set true to remove this line (requires line_id)",
@@ -845,6 +849,10 @@ export const toolDefinitions = [
               tax_code_ref: {
                 type: "string",
                 description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes. Required for non-US QBO accounts to avoid 400 errors.",
+              },
+              service_date: {
+                type: "string",
+                description: "Service date for this line in YYYY-MM-DD format (optional).",
               },
             },
             required: [],
@@ -954,6 +962,10 @@ export const toolDefinitions = [
               tax_code_ref: {
                 type: "string",
                 description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes. Required for non-US QBO accounts to avoid 400 errors.",
+              },
+              service_date: {
+                type: "string",
+                description: "Service date for this line in YYYY-MM-DD format (optional).",
               },
             },
             required: [],
@@ -1073,6 +1085,10 @@ export const toolDefinitions = [
               tax_code_ref: {
                 type: "string",
                 description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes.",
+              },
+              service_date: {
+                type: "string",
+                description: "Service date for this line in YYYY-MM-DD format (optional).",
               },
               delete: {
                 type: "boolean",
