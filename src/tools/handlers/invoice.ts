@@ -7,6 +7,7 @@ import {
   getDepartmentCache,
   resolveItem,
   resolveCustomer,
+  resolveTaxCode,
 } from "../../client/index.js";
 import { validateAmount, toDollars, formatDollars, sumCents, outputReport } from "../../utils/index.js";
 
@@ -130,6 +131,7 @@ export async function handleCreateInvoice(
     }
 
     const itemRef = await resolveItem(client, itemInput);
+    const taxCodeRef = line.tax_code_ref ? await resolveTaxCode(client, line.tax_code_ref) : undefined;
 
     const qty = line.qty ?? 1;
     let amountCents: number;
@@ -151,7 +153,7 @@ export async function handleCreateInvoice(
       amountCents,
       amountDollars: toDollars(amountCents),
       description: line.description,
-      taxCodeRef: line.tax_code_ref,
+      taxCodeRef,
     };
   }));
 
@@ -180,7 +182,7 @@ export async function handleCreateInvoice(
         ItemRef: line.itemRef,
         Qty: line.qty,
         UnitPrice: line.unitPriceDollars,
-        ...(line.taxCodeRef && { TaxCodeRef: { value: line.taxCodeRef } }),
+        ...(line.taxCodeRef && { TaxCodeRef: { value: line.taxCodeRef.value } }),
       },
     })),
   };
@@ -205,7 +207,7 @@ export async function handleCreateInvoice(
       "",
       "Lines:",
       ...resolvedLines.map(l =>
-        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}${l.taxCodeRef ? ` [TaxCode: ${l.taxCodeRef}]` : ""}`
+        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}${l.taxCodeRef ? ` [TaxCode: ${l.taxCodeRef.name}]` : ""}`
       ),
       "",
       "Set draft=false to create this invoice.",
@@ -517,7 +519,10 @@ export async function handleEditInvoice(
             }
           }
           if (change.description !== undefined) line.Description = change.description;
-          if (change.tax_code_ref !== undefined) detail.TaxCodeRef = { value: change.tax_code_ref };
+          if (change.tax_code_ref) {
+            const resolvedTax = await resolveTaxCode(client, change.tax_code_ref);
+            detail.TaxCodeRef = { value: resolvedTax.value };
+          }
 
           line.SalesItemLineDetail = detail as typeof line.SalesItemLineDetail;
           line.DetailType = 'SalesItemLineDetail';
@@ -534,6 +539,7 @@ export async function handleEditInvoice(
         }
 
         const itemRef = await resolveItem(client, itemInput);
+        const resolvedTax = change.tax_code_ref ? await resolveTaxCode(client, change.tax_code_ref) : undefined;
 
         const qty = change.qty ?? 1;
         let amountCents: number;
@@ -556,7 +562,7 @@ export async function handleEditInvoice(
             ItemRef: itemRef,
             Qty: qty,
             UnitPrice: unitPriceDollars,
-            ...(change.tax_code_ref && { TaxCodeRef: { value: change.tax_code_ref } }),
+            ...(resolvedTax && { TaxCodeRef: { value: resolvedTax.value } }),
           },
         } as typeof finalLines[0];
         finalLines.push(newLine);

@@ -64,6 +64,20 @@ export const toolDefinitions = [
     },
   },
   {
+    name: "list_tax_codes",
+    description: "List tax codes with their IDs. Use this to discover the tax code to pass as tax_code_ref on invoice lines (IDs differ per company file).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        active_only: {
+          type: "boolean",
+          description: "If true, only return active tax codes (default: true)",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "get_profit_loss",
     description: "Get a Profit and Loss (Income Statement) report. Can be broken down by department/location.",
     inputSchema: {
@@ -939,7 +953,7 @@ export const toolDefinitions = [
               },
               tax_code_ref: {
                 type: "string",
-                description: "Tax code ID for this line (e.g. '4' for GST Free on Australian accounts). Required for non-US QBO accounts to avoid 400 errors.",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes. Required for non-US QBO accounts to avoid 400 errors.",
               },
             },
             required: [],
@@ -1058,7 +1072,7 @@ export const toolDefinitions = [
               },
               tax_code_ref: {
                 type: "string",
-                description: "Tax code ID for this line (e.g. '4' for GST Free on Australian accounts).",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes.",
               },
               delete: {
                 type: "boolean",

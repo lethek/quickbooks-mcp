@@ -299,6 +299,7 @@ QBO_INLINE_OUTPUT=true
 | **Query & Reports** | |
 | `query` | Run SQL-like queries against any QuickBooks entity |
 | `list_accounts` | List chart of accounts with filtering |
+| `list_tax_codes` | List tax codes with IDs (for invoice line tax_code_ref) |
 | `get_profit_loss` | Profit & Loss report (by month, department, class, etc.) |
 | `get_balance_sheet` | Balance Sheet report |
 | `get_trial_balance` | Trial Balance report |
