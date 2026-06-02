@@ -8,9 +8,11 @@ import {
   CachedDepartment,
   CachedVendor,
   CachedItem,
+  CachedTaxCode,
   AccountCache,
   DepartmentCache,
   VendorCache,
+  TaxCodeCache,
   QBQueryResponse,
 } from "../types/index.js";
 
@@ -21,6 +23,7 @@ const LOOKUP_CACHE_TTL_MS = 15 * 60 * 1000;
 let departmentCache: DepartmentCache | null = null;
 let accountCache: AccountCache | null = null;
 let vendorCache: VendorCache | null = null;
+let taxCodeCache: TaxCodeCache | null = null;
 // Item cache: lazy per-entry lookup (not bulk-loaded like others)
 const itemCacheById = new Map<string, CachedItem>();
 const itemCacheByName = new Map<string, CachedItem>(); // lowercase key
@@ -32,6 +35,7 @@ export function clearLookupCache(): void {
   departmentCache = null;
   accountCache = null;
   vendorCache = null;
+  taxCodeCache = null;
   itemCacheById.clear();
   itemCacheByName.clear();
   customerCacheById.clear();
@@ -62,6 +66,55 @@ export async function getDepartmentCache(client: QuickBooks): Promise<Department
 
   departmentCache = { items, byId, byName, fetchedAt: Date.now() };
   return departmentCache;
+}
+
+// fetchAll only handles pagination; the QBO API returns whatever tax codes it
+// returns (no Active filter applied here). Callers filter as needed.
+export async function getTaxCodeCache(client: QuickBooks): Promise<TaxCodeCache> {
+  if (taxCodeCache && (Date.now() - taxCodeCache.fetchedAt) < LOOKUP_CACHE_TTL_MS) {
+    return taxCodeCache;
+  }
+
+  const result = await promisify<unknown>((cb) => client.findTaxCodes({ fetchAll: true }, cb));
+  const items = extractQueryResults<CachedTaxCode>(result, 'TaxCode');
+
+  const byId = new Map<string, CachedTaxCode>();
+  const byName = new Map<string, CachedTaxCode>();
+  for (const taxCode of items) {
+    byId.set(taxCode.Id, taxCode);
+    byName.set(taxCode.Name.toLowerCase(), taxCode);
+  }
+
+  taxCodeCache = { items, byId, byName, fetchedAt: Date.now() };
+  return taxCodeCache;
+}
+
+// Resolve tax code by name or ID using cache
+// Returns { value, name } ref object for QuickBooks API
+export async function resolveTaxCode(client: QuickBooks, nameOrId: string): Promise<{ value: string; name: string }> {
+  const trimmed = nameOrId.trim();
+  if (!trimmed) {
+    throw new Error('Tax code not found: empty value. Provide a tax code name or ID.');
+  }
+
+  const cache = await getTaxCodeCache(client);
+
+  // Try exact ID match
+  const byId = cache.byId.get(trimmed);
+  if (byId) return { value: byId.Id, name: byId.Name };
+
+  // Try exact name match (case-insensitive)
+  const byName = cache.byName.get(trimmed.toLowerCase());
+  if (byName) return { value: byName.Id, name: byName.Name };
+
+  // Try partial name match
+  const byPartial = cache.items.find(t =>
+    t.Name.toLowerCase().includes(trimmed.toLowerCase())
+  );
+  if (byPartial) return { value: byPartial.Id, name: byPartial.Name };
+
+  const available = cache.items.map(t => t.Name).join(', ');
+  throw new Error(`Tax code not found: "${trimmed}". Available: ${available}`);
 }
 
 export async function getAccountCache(client: QuickBooks): Promise<AccountCache> {

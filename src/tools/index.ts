@@ -6,6 +6,7 @@ import {
   handleGetCompanyInfo,
   handleQuery,
   handleListAccounts,
+  handleListTaxCodes,
   handleGetProfitLoss,
   handleGetBalanceSheet,
   handleGetTrialBalance,
@@ -51,6 +52,7 @@ const toolHandlers = new Map<string, ToolHandler>();
 toolHandlers.set("get_company_info", (client) => handleGetCompanyInfo(client));
 toolHandlers.set("query", (client, args) => handleQuery(client, args as { query: string }));
 toolHandlers.set("list_accounts", (client, args) => handleListAccounts(client, args as { account_type?: string; active_only?: boolean }));
+toolHandlers.set("list_tax_codes", (client, args) => handleListTaxCodes(client, args as Parameters<typeof handleListTaxCodes>[1]));
 toolHandlers.set("get_profit_loss", (client, args) => handleGetProfitLoss(client, args as Parameters<typeof handleGetProfitLoss>[1]));
 toolHandlers.set("get_balance_sheet", (client, args) => handleGetBalanceSheet(client, args as Parameters<typeof handleGetBalanceSheet>[1]));
 toolHandlers.set("get_trial_balance", (client, args) => handleGetTrialBalance(client, args as Parameters<typeof handleGetTrialBalance>[1]));

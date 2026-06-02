@@ -3,6 +3,7 @@
 export { handleGetCompanyInfo } from './company.js';
 export { handleQuery } from './query.js';
 export { handleListAccounts } from './accounts.js';
+export { handleListTaxCodes } from './tax-codes.js';
 export {
   handleGetProfitLoss,
   handleGetBalanceSheet,

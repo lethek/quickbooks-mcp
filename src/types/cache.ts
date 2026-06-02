@@ -60,3 +60,18 @@ export interface CachedItem {
   Active?: boolean;
   fetchedAt: number;   // per-entry TTL for lazy cache
 }
+
+export interface CachedTaxCode {
+  Id: string;
+  Name: string;
+  Description?: string;
+  Taxable?: boolean;
+  Active?: boolean;
+}
+
+export interface TaxCodeCache {
+  items: CachedTaxCode[];
+  byId: Map<string, CachedTaxCode>;
+  byName: Map<string, CachedTaxCode>;   // lowercase key
+  fetchedAt: number;
+}

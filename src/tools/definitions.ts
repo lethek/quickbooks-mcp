@@ -64,6 +64,20 @@ export const toolDefinitions = [
     },
   },
   {
+    name: "list_tax_codes",
+    description: "List tax codes with their IDs. Use this to discover the tax code to pass as tax_code_ref on invoice lines (IDs differ per company file).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        active_only: {
+          type: "boolean",
+          description: "If true, only return active tax codes (default: true)",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "get_profit_loss",
     description: "Get a Profit and Loss (Income Statement) report. Can be broken down by department/location.",
     inputSchema: {
@@ -741,6 +755,10 @@ export const toolDefinitions = [
                 type: "string",
                 description: "Line description",
               },
+              tax_code_ref: {
+                type: "string",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes.",
+              },
               delete: {
                 type: "boolean",
                 description: "Set true to remove this line (requires line_id)",
@@ -824,6 +842,10 @@ export const toolDefinitions = [
                 type: "string",
                 description: "Line description (optional)",
               },
+              tax_code_ref: {
+                type: "string",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes. Required for non-US QBO accounts to avoid 400 errors.",
+              },
             },
             required: [],
           },
@@ -890,6 +912,11 @@ export const toolDefinitions = [
           type: "boolean",
           description: "Allow customer to pay this invoice via bank transfer (ACH) online. Must be explicitly set — company defaults do not apply via API.",
         },
+        global_tax_calculation: {
+          type: "string",
+          enum: ["TaxInclusive", "TaxExcluded", "NotApplicable"],
+          description: "Tax calculation method. Use TaxInclusive if line amounts already include tax (required for some accounts). Defaults to NotApplicable if omitted.",
+        },
         doc_number: {
           type: "string",
           description: "Reference number for the invoice (optional)",
@@ -923,6 +950,10 @@ export const toolDefinitions = [
               description: {
                 type: "string",
                 description: "Line description (optional)",
+              },
+              tax_code_ref: {
+                type: "string",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes. Required for non-US QBO accounts to avoid 400 errors.",
               },
             },
             required: [],
@@ -992,6 +1023,11 @@ export const toolDefinitions = [
           type: "boolean",
           description: "Allow customer to pay via bank transfer (ACH) online",
         },
+        global_tax_calculation: {
+          type: "string",
+          enum: ["TaxInclusive", "TaxExcluded", "NotApplicable"],
+          description: "Tax calculation method. Use TaxInclusive if line amounts already include tax.",
+        },
         customer_name: {
           type: "string",
           description: "New customer display name (auto-resolved to ID)",
@@ -1033,6 +1069,10 @@ export const toolDefinitions = [
               description: {
                 type: "string",
                 description: "Line description",
+              },
+              tax_code_ref: {
+                type: "string",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes.",
               },
               delete: {
                 type: "boolean",

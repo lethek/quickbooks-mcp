@@ -7,6 +7,7 @@ import {
   getDepartmentCache,
   resolveItem,
   resolveCustomer,
+  resolveTaxCode,
 } from "../../client/index.js";
 import { validateAmount, toDollars, formatDollars, sumCents, outputReport } from "../../utils/index.js";
 
@@ -18,6 +19,7 @@ interface InvoiceLineChange {
   qty?: number;
   unit_price?: number;
   description?: string;
+  tax_code_ref?: string;
   delete?: boolean;
 }
 
@@ -28,6 +30,7 @@ interface CreateInvoiceLine {
   qty?: number;
   unit_price?: number;
   description?: string;
+  tax_code_ref?: string;
 }
 
 export async function handleCreateInvoice(
@@ -45,6 +48,7 @@ export async function handleCreateInvoice(
     sales_term_ref?: string;
     allow_online_credit_card_payment?: boolean;
     allow_online_ach_payment?: boolean;
+    global_tax_calculation?: "TaxInclusive" | "TaxExcluded" | "NotApplicable";
     doc_number?: string;
     lines: CreateInvoiceLine[];
     draft?: boolean;
@@ -55,7 +59,7 @@ export async function handleCreateInvoice(
     due_date, department_name, department_id,
     memo, customer_memo, bill_email, sales_term_ref,
     allow_online_credit_card_payment, allow_online_ach_payment,
-    doc_number, lines, draft = true,
+    global_tax_calculation, doc_number, lines, draft = true,
   } = args;
 
   if (!lines || lines.length === 0) {
@@ -127,6 +131,7 @@ export async function handleCreateInvoice(
     }
 
     const itemRef = await resolveItem(client, itemInput);
+    const taxCodeRef = line.tax_code_ref ? await resolveTaxCode(client, line.tax_code_ref) : undefined;
 
     const qty = line.qty ?? 1;
     let amountCents: number;
@@ -148,6 +153,7 @@ export async function handleCreateInvoice(
       amountCents,
       amountDollars: toDollars(amountCents),
       description: line.description,
+      taxCodeRef,
     };
   }));
 
@@ -166,6 +172,7 @@ export async function handleCreateInvoice(
     ...(bill_email && { BillEmail: { Address: bill_email } }),
     ...(allow_online_credit_card_payment !== undefined && { AllowOnlineCreditCardPayment: allow_online_credit_card_payment }),
     ...(allow_online_ach_payment !== undefined && { AllowOnlineACHPayment: allow_online_ach_payment }),
+    ...(global_tax_calculation !== undefined && { GlobalTaxCalculation: global_tax_calculation }),
     ...(doc_number && { DocNumber: doc_number }),
     Line: resolvedLines.map((line) => ({
       Amount: line.amountDollars,
@@ -175,6 +182,7 @@ export async function handleCreateInvoice(
         ItemRef: line.itemRef,
         Qty: line.qty,
         UnitPrice: line.unitPriceDollars,
+        ...(line.taxCodeRef && { TaxCodeRef: { value: line.taxCodeRef.value } }),
       },
     })),
   };
@@ -194,11 +202,12 @@ export async function handleCreateInvoice(
       `Bill Email: ${bill_email || "(none)"}`,
       ...(allow_online_credit_card_payment !== undefined ? [`Online CC Payment: ${allow_online_credit_card_payment}`] : []),
       ...(allow_online_ach_payment !== undefined ? [`Online ACH Payment: ${allow_online_ach_payment}`] : []),
+      ...(global_tax_calculation !== undefined ? [`Tax Calculation: ${global_tax_calculation}`] : []),
       `Total: $${formatDollars(totalCents)}`,
       "",
       "Lines:",
       ...resolvedLines.map(l =>
-        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}`
+        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}${l.taxCodeRef ? ` [TaxCode: ${l.taxCodeRef.name}]` : ""}`
       ),
       "",
       "Set draft=false to create this invoice.",
@@ -341,6 +350,7 @@ export async function handleEditInvoice(
     sales_term_ref?: string;
     allow_online_credit_card_payment?: boolean;
     allow_online_ach_payment?: boolean;
+    global_tax_calculation?: "TaxInclusive" | "TaxExcluded" | "NotApplicable";
     customer_name?: string;
     department_name?: string;
     lines?: InvoiceLineChange[];
@@ -350,7 +360,7 @@ export async function handleEditInvoice(
   const {
     id, txn_date, due_date, memo, customer_memo, bill_email,
     sales_term_ref, allow_online_credit_card_payment, allow_online_ach_payment,
-    customer_name, department_name, lines: lineChanges, draft = true,
+    global_tax_calculation, customer_name, department_name, lines: lineChanges, draft = true,
   } = args;
 
   // Fetch current Invoice
@@ -370,6 +380,7 @@ export async function handleEditInvoice(
     SalesTermRef?: { value: string; name?: string };
     AllowOnlineCreditCardPayment?: boolean;
     AllowOnlineACHPayment?: boolean;
+    GlobalTaxCalculation?: string;
     Line: Array<{
       Id: string;
       Amount: number;
@@ -424,6 +435,9 @@ export async function handleEditInvoice(
     if (current.AllowOnlineACHPayment !== undefined) {
       updated.AllowOnlineACHPayment = current.AllowOnlineACHPayment;
     }
+    if (current.GlobalTaxCalculation !== undefined) {
+      updated.GlobalTaxCalculation = current.GlobalTaxCalculation;
+    }
     // Copy lines and strip read-only fields
     updated.Line = current.Line.map(line => {
       const { LineNum, ...rest } = line as Record<string, unknown>;
@@ -438,6 +452,7 @@ export async function handleEditInvoice(
   if (bill_email !== undefined) updated.BillEmail = { Address: bill_email };
   if (allow_online_credit_card_payment !== undefined) updated.AllowOnlineCreditCardPayment = allow_online_credit_card_payment;
   if (allow_online_ach_payment !== undefined) updated.AllowOnlineACHPayment = allow_online_ach_payment;
+  if (global_tax_calculation !== undefined) updated.GlobalTaxCalculation = global_tax_calculation;
 
   // Resolve sales term if provided
   if (sales_term_ref !== undefined) {
@@ -504,6 +519,10 @@ export async function handleEditInvoice(
             }
           }
           if (change.description !== undefined) line.Description = change.description;
+          if (change.tax_code_ref) {
+            const resolvedTax = await resolveTaxCode(client, change.tax_code_ref);
+            detail.TaxCodeRef = { value: resolvedTax.value };
+          }
 
           line.SalesItemLineDetail = detail as typeof line.SalesItemLineDetail;
           line.DetailType = 'SalesItemLineDetail';
@@ -520,6 +539,7 @@ export async function handleEditInvoice(
         }
 
         const itemRef = await resolveItem(client, itemInput);
+        const resolvedTax = change.tax_code_ref ? await resolveTaxCode(client, change.tax_code_ref) : undefined;
 
         const qty = change.qty ?? 1;
         let amountCents: number;
@@ -542,6 +562,7 @@ export async function handleEditInvoice(
             ItemRef: itemRef,
             Qty: qty,
             UnitPrice: unitPriceDollars,
+            ...(resolvedTax && { TaxCodeRef: { value: resolvedTax.value } }),
           },
         } as typeof finalLines[0];
         finalLines.push(newLine);
@@ -574,6 +595,7 @@ export async function handleEditInvoice(
     }
     if (allow_online_credit_card_payment !== undefined) previewLines.push(`  Online CC Payment: ${current.AllowOnlineCreditCardPayment ?? '(not set)'} → ${allow_online_credit_card_payment}`);
     if (allow_online_ach_payment !== undefined) previewLines.push(`  Online ACH Payment: ${current.AllowOnlineACHPayment ?? '(not set)'} → ${allow_online_ach_payment}`);
+    if (global_tax_calculation !== undefined) previewLines.push(`  Tax Calculation: ${current.GlobalTaxCalculation ?? '(not set)'} → ${global_tax_calculation}`);
     if (customer_name !== undefined) {
       const newCust = (updated.CustomerRef as { name?: string })?.name || customer_name;
       previewLines.push(`  Customer: ${current.CustomerRef?.name || '(none)'} → ${newCust}`);

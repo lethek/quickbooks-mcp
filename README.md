@@ -299,6 +299,7 @@ QBO_INLINE_OUTPUT=true
 | **Query & Reports** | |
 | `query` | Run SQL-like queries against any QuickBooks entity |
 | `list_accounts` | List chart of accounts with filtering |
+| `list_tax_codes` | List tax codes with IDs (for invoice line tax_code_ref) |
 | `get_profit_loss` | Profit & Loss report (by month, department, class, etc.) |
 | `get_balance_sheet` | Balance Sheet report |
 | `get_trial_balance` | Trial Balance report |
@@ -321,9 +322,9 @@ QBO_INLINE_OUTPUT=true
 | `get_sales_receipt` | Fetch a sales receipt by ID |
 | `edit_sales_receipt` | Modify an existing sales receipt |
 | **Invoices** | |
-| `create_invoice` | Create an invoice with item lines (customer required) |
+| `create_invoice` | Create an invoice with item lines (customer required); supports `global_tax_calculation` (TaxInclusive/TaxExcluded/NotApplicable) |
 | `get_invoice` | Fetch an invoice by ID |
-| `edit_invoice` | Modify an existing invoice |
+| `edit_invoice` | Modify an existing invoice; supports `global_tax_calculation` (TaxInclusive/TaxExcluded/NotApplicable) |
 | **Deposits** | |
 | `create_deposit` | Create a bank deposit |
 | `get_deposit` | Fetch a deposit by ID |

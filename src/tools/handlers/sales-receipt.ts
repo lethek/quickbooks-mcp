@@ -7,6 +7,7 @@ import {
   getDepartmentCache,
   resolveItem,
   resolveCustomer,
+  resolveTaxCode,
 } from "../../client/index.js";
 import { validateAmount, toDollars, formatDollars, sumCents, outputReport } from "../../utils/index.js";
 
@@ -18,6 +19,7 @@ interface SalesReceiptLineChange {
   qty?: number;
   unit_price?: number;
   description?: string;
+  tax_code_ref?: string;
   delete?: boolean;
 }
 
@@ -28,6 +30,7 @@ interface CreateSalesReceiptLine {
   qty?: number;
   unit_price?: number;
   description?: string;
+  tax_code_ref?: string;
 }
 
 export async function handleCreateSalesReceipt(
@@ -112,6 +115,7 @@ export async function handleCreateSalesReceipt(
     }
 
     const itemRef = await resolveItem(client, itemInput);
+    const taxCodeRef = line.tax_code_ref ? await resolveTaxCode(client, line.tax_code_ref) : undefined;
 
     const qty = line.qty ?? 1;
     let amountCents: number;
@@ -128,6 +132,7 @@ export async function handleCreateSalesReceipt(
 
     return {
       itemRef,
+      taxCodeRef,
       qty,
       unitPriceDollars,
       amountCents,
@@ -155,6 +160,7 @@ export async function handleCreateSalesReceipt(
         ItemRef: line.itemRef,
         Qty: line.qty,
         UnitPrice: line.unitPriceDollars,
+        ...(line.taxCodeRef && { TaxCodeRef: { value: line.taxCodeRef.value } }),
       },
     })),
   };
@@ -173,7 +179,7 @@ export async function handleCreateSalesReceipt(
       "",
       "Lines:",
       ...resolvedLines.map(l =>
-        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}`
+        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}${l.taxCodeRef ? ` [TaxCode: ${l.taxCodeRef.name}]` : ""}`
       ),
       "",
       "Set draft=false to create this sales receipt.",
@@ -412,6 +418,10 @@ export async function handleEditSalesReceipt(
             }
           }
           if (change.description !== undefined) line.Description = change.description;
+          if (change.tax_code_ref) {
+            const resolvedTax = await resolveTaxCode(client, change.tax_code_ref);
+            detail.TaxCodeRef = { value: resolvedTax.value };
+          }
 
           line.SalesItemLineDetail = detail as typeof line.SalesItemLineDetail;
           line.DetailType = 'SalesItemLineDetail';
@@ -428,6 +438,7 @@ export async function handleEditSalesReceipt(
         }
 
         const itemRef = await resolveItem(client, itemInput);
+        const resolvedTax = change.tax_code_ref ? await resolveTaxCode(client, change.tax_code_ref) : undefined;
 
         const qty = change.qty ?? 1;
         let amountCents: number;
@@ -450,6 +461,7 @@ export async function handleEditSalesReceipt(
             ItemRef: itemRef,
             Qty: qty,
             UnitPrice: unitPriceDollars,
+            ...(resolvedTax && { TaxCodeRef: { value: resolvedTax.value } }),
           },
         } as typeof finalLines[0];
         finalLines.push(newLine);
