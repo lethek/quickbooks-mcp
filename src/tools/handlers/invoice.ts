@@ -20,6 +20,7 @@ interface InvoiceLineChange {
   unit_price?: number;
   description?: string;
   tax_code_ref?: string;
+  service_date?: string;
   delete?: boolean;
 }
 
@@ -31,6 +32,7 @@ interface CreateInvoiceLine {
   unit_price?: number;
   description?: string;
   tax_code_ref?: string;
+  service_date?: string;
 }
 
 export async function handleCreateInvoice(
@@ -154,6 +156,7 @@ export async function handleCreateInvoice(
       amountDollars: toDollars(amountCents),
       description: line.description,
       taxCodeRef,
+      serviceDate: line.service_date,
     };
   }));
 
@@ -183,6 +186,7 @@ export async function handleCreateInvoice(
         Qty: line.qty,
         UnitPrice: line.unitPriceDollars,
         ...(line.taxCodeRef && { TaxCodeRef: { value: line.taxCodeRef.value } }),
+        ...(line.serviceDate && { ServiceDate: line.serviceDate }),
       },
     })),
   };
@@ -207,7 +211,7 @@ export async function handleCreateInvoice(
       "",
       "Lines:",
       ...resolvedLines.map(l =>
-        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}${l.taxCodeRef ? ` [TaxCode: ${l.taxCodeRef.name}]` : ""}`
+        `  ${l.itemRef.name}: Qty ${l.qty} × $${l.unitPriceDollars.toFixed(2)} = $${l.amountDollars.toFixed(2)}${l.description ? ` "${l.description}"` : ""}${l.taxCodeRef ? ` [TaxCode: ${l.taxCodeRef.name}]` : ""}${l.serviceDate ? ` [Service: ${l.serviceDate}]` : ""}`
       ),
       "",
       "Set draft=false to create this invoice.",
@@ -280,6 +284,7 @@ export async function handleGetInvoice(
         ItemAccountRef?: { value: string; name?: string };
         ClassRef?: { value: string; name?: string };
         TaxCodeRef?: { value: string; name?: string };
+        ServiceDate?: string;
       };
     }>;
   };
@@ -326,7 +331,8 @@ export async function handleGetInvoice(
       const unitPrice = detail.UnitPrice ?? line.Amount;
       const acctStr = detail.ItemAccountRef?.name ? ` → ${detail.ItemAccountRef.name}` : '';
       const descStr = line.Description ? ` "${line.Description}"` : '';
-      lines.push(`  Line ${line.Id}: ${itemName} (Qty: ${qty} × $${unitPrice.toFixed(2)}) = $${line.Amount.toFixed(2)}${acctStr}${descStr}`);
+      const svcStr = detail.ServiceDate ? ` [Service: ${detail.ServiceDate}]` : '';
+      lines.push(`  Line ${line.Id}: ${itemName} (Qty: ${qty} × $${unitPrice.toFixed(2)}) = $${line.Amount.toFixed(2)}${acctStr}${descStr}${svcStr}`);
     } else if (line.DetailType === 'SubTotalLineDetail') {
       lines.push(`  SubTotal: $${line.Amount.toFixed(2)}`);
     }
@@ -393,6 +399,7 @@ export async function handleEditInvoice(
         ItemAccountRef?: { value: string; name?: string };
         ClassRef?: { value: string; name?: string };
         TaxCodeRef?: { value: string; name?: string };
+        ServiceDate?: string;
       };
     }>;
   };
@@ -509,6 +516,7 @@ export async function handleEditInvoice(
             UnitPrice?: number;
             ItemAccountRef?: { value: string; name?: string };
             TaxCodeRef?: { value: string; name?: string };
+            ServiceDate?: string;
           };
 
           if (change.amount !== undefined) {
@@ -523,6 +531,7 @@ export async function handleEditInvoice(
             const resolvedTax = await resolveTaxCode(client, change.tax_code_ref);
             detail.TaxCodeRef = { value: resolvedTax.value };
           }
+          if (change.service_date !== undefined) detail.ServiceDate = change.service_date;
 
           line.SalesItemLineDetail = detail as typeof line.SalesItemLineDetail;
           line.DetailType = 'SalesItemLineDetail';
@@ -563,6 +572,7 @@ export async function handleEditInvoice(
             Qty: qty,
             UnitPrice: unitPriceDollars,
             ...(resolvedTax && { TaxCodeRef: { value: resolvedTax.value } }),
+            ...(change.service_date && { ServiceDate: change.service_date }),
           },
         } as typeof finalLines[0];
         finalLines.push(newLine);
@@ -613,7 +623,8 @@ export async function handleEditInvoice(
         if (detail) {
           const itemName = detail.ItemRef?.name || detail.ItemRef?.value || '(item)';
           const descStr = line.Description ? ` "${line.Description}"` : '';
-          previewLines.push(`  ${itemName}: $${line.Amount.toFixed(2)}${descStr}`);
+          const svcStr = detail.ServiceDate ? ` [Service: ${detail.ServiceDate}]` : '';
+          previewLines.push(`  ${itemName}: $${line.Amount.toFixed(2)}${descStr}${svcStr}`);
         }
       }
     }
