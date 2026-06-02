@@ -995,7 +995,7 @@ export const toolDefinitions = [
   },
   {
     name: "edit_invoice",
-    description: "Modify an existing invoice. Can update date, due date, memo, customer, department, terms, email, online payment settings, and/or lines. For lines: provide line_id to update existing line, omit line_id to add new line (requires item_name), set delete=true to remove.",
+    description: "Modify an existing invoice. Can update date, due date, memo, customer, department, terms, email, reference number (doc_number), online payment settings, and/or lines. For lines: provide line_id to update existing line, omit line_id to add new line (requires item_name), set delete=true to remove.",
     inputSchema: {
       type: "object",
       properties: {
@@ -1047,6 +1047,10 @@ export const toolDefinitions = [
         department_name: {
           type: "string",
           description: "Header-level department/location name (auto-resolved to ID)",
+        },
+        doc_number: {
+          type: "string",
+          description: "New reference number for the invoice (optional)",
         },
         lines: {
           type: "array",
