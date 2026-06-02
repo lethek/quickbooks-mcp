@@ -757,7 +757,7 @@ export const toolDefinitions = [
               },
               tax_code_ref: {
                 type: "string",
-                description: "Tax code ID for this line (e.g. '4' for GST Free on Australian accounts).",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes.",
               },
               delete: {
                 type: "boolean",
@@ -844,7 +844,7 @@ export const toolDefinitions = [
               },
               tax_code_ref: {
                 type: "string",
-                description: "Tax code ID for this line (e.g. '4' for GST Free on Australian accounts). Required for non-US QBO accounts to avoid 400 errors.",
+                description: "Tax code for this line. Accepts a name (e.g. 'GST Free') or ID. Use list_tax_codes to discover available codes. Required for non-US QBO accounts to avoid 400 errors.",
               },
             },
             required: [],
