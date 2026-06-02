@@ -359,6 +359,7 @@ export async function handleEditInvoice(
     global_tax_calculation?: "TaxInclusive" | "TaxExcluded" | "NotApplicable";
     customer_name?: string;
     department_name?: string;
+    doc_number?: string;
     lines?: InvoiceLineChange[];
     draft?: boolean;
   }
@@ -366,7 +367,7 @@ export async function handleEditInvoice(
   const {
     id, txn_date, due_date, memo, customer_memo, bill_email,
     sales_term_ref, allow_online_credit_card_payment, allow_online_ach_payment,
-    global_tax_calculation, customer_name, department_name, lines: lineChanges, draft = true,
+    global_tax_calculation, customer_name, department_name, doc_number, lines: lineChanges, draft = true,
   } = args;
 
   // Fetch current Invoice
@@ -454,6 +455,7 @@ export async function handleEditInvoice(
 
   if (txn_date !== undefined) updated.TxnDate = txn_date;
   if (due_date !== undefined) updated.DueDate = due_date;
+  if (doc_number !== undefined) updated.DocNumber = doc_number;
   if (memo !== undefined) updated.PrivateNote = memo;
   if (customer_memo !== undefined) updated.CustomerMemo = { value: customer_memo };
   if (bill_email !== undefined) updated.BillEmail = { Address: bill_email };
