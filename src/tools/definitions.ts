@@ -1110,6 +1110,50 @@ export const toolDefinitions = [
     },
   },
   {
+    name: "send_invoice",
+    description: "Email an invoice PDF to the customer via QuickBooks. By default (draft=true) shows a preview of who will be emailed without sending. Set draft=false to actually send. Emails to send_to if provided, otherwise to the invoice's billing email (BillEmail). Updates the invoice's email status to EmailSent.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "The invoice ID to send",
+        },
+        send_to: {
+          type: "string",
+          description: "Email address to send to (optional). If omitted, uses the invoice's billing email (BillEmail). Does not change the saved BillEmail.",
+        },
+        draft: {
+          type: "boolean",
+          description: "If true (default), preview the recipient without sending. Set draft=false to actually email the invoice.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "send_sales_receipt",
+    description: "Email a sales receipt PDF to the customer via QuickBooks. By default (draft=true) shows a preview of who will be emailed without sending. Set draft=false to actually send. Emails to send_to if provided, otherwise to the sales receipt's billing email (BillEmail). Updates the sales receipt's email status to EmailSent.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "The sales receipt ID to send",
+        },
+        send_to: {
+          type: "string",
+          description: "Email address to send to (optional). If omitted, uses the sales receipt's billing email (BillEmail). Does not change the saved BillEmail.",
+        },
+        draft: {
+          type: "boolean",
+          description: "If true (default), preview the recipient without sending. Set draft=false to actually email the sales receipt.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
     name: "create_deposit",
     description: "Create a bank deposit. Accepts account/department/vendor names (will lookup IDs automatically). Lines represent the sources of the deposit — amounts can be positive (income) or negative (fees, deductions). QuickBooks computes the total from line amounts. Returns deposit details and a link to view in QuickBooks.",
     inputSchema: {

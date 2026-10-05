@@ -38,8 +38,18 @@ export function isAuthError(error: unknown): boolean {
   return false;
 }
 
+// Refresh tokens rotate, so two overlapping refreshes would leave one caller
+// holding a spent token. Serialise them (matters for the HTTP transport).
+let clientLock: Promise<unknown> = Promise.resolve();
+
 // Initialize or refresh the QuickBooks session
-export async function getClient(): Promise<QuickBooks> {
+export function getClient(): Promise<QuickBooks> {
+  const result = clientLock.then(createClient);
+  clientLock = result.catch(() => undefined);
+  return result;
+}
+
+async function createClient(): Promise<QuickBooks> {
   // Get credential provider (singleton)
   if (!provider) {
     provider = getCredentialProvider();
