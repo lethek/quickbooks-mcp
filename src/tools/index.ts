@@ -27,6 +27,8 @@ import {
   handleCreateInvoice,
   handleGetInvoice,
   handleEditInvoice,
+  handleSendInvoice,
+  handleSendSalesReceipt,
   handleCreateDeposit,
   handleGetDeposit,
   handleEditDeposit,
@@ -73,6 +75,8 @@ toolHandlers.set("edit_sales_receipt", (client, args) => handleEditSalesReceipt(
 toolHandlers.set("create_invoice", (client, args) => handleCreateInvoice(client, args as Parameters<typeof handleCreateInvoice>[1]));
 toolHandlers.set("get_invoice", (client, args) => handleGetInvoice(client, args as { id: string }));
 toolHandlers.set("edit_invoice", (client, args) => handleEditInvoice(client, args as Parameters<typeof handleEditInvoice>[1]));
+toolHandlers.set("send_invoice", (client, args) => handleSendInvoice(client, args as Parameters<typeof handleSendInvoice>[1]));
+toolHandlers.set("send_sales_receipt", (client, args) => handleSendSalesReceipt(client, args as Parameters<typeof handleSendSalesReceipt>[1]));
 toolHandlers.set("create_deposit", (client, args) => handleCreateDeposit(client, args as Parameters<typeof handleCreateDeposit>[1]));
 toolHandlers.set("get_deposit", (client, args) => handleGetDeposit(client, args as { id: string }));
 toolHandlers.set("edit_deposit", (client, args) => handleEditDeposit(client, args as Parameters<typeof handleEditDeposit>[1]));

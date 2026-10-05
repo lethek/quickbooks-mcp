@@ -20,6 +20,7 @@ export { handleCreateBill, handleGetBill, handleEditBill } from './bill.js';
 export { handleCreateExpense, handleGetExpense, handleEditExpense } from './expense.js';
 export { handleCreateSalesReceipt, handleGetSalesReceipt, handleEditSalesReceipt } from './sales-receipt.js';
 export { handleCreateInvoice, handleGetInvoice, handleEditInvoice } from './invoice.js';
+export { handleSendInvoice, handleSendSalesReceipt } from './send.js';
 export { handleCreateDeposit, handleGetDeposit, handleEditDeposit } from './deposit.js';
 export { handleCreateVendorCredit, handleGetVendorCredit, handleEditVendorCredit } from './vendor-credit.js';
 export { handleCreateCustomer, handleGetCustomer, handleEditCustomer } from './customer.js';

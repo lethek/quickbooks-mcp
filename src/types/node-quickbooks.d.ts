@@ -74,6 +74,10 @@ declare module "node-quickbooks" {
     getCustomer(id: string, callback: Callback<unknown>): void;
     getVendorCredit(id: string, callback: Callback<unknown>): void;
 
+    // Send methods (email the entity PDF to BillEmail or the optional sendTo address)
+    sendInvoicePdf(id: string, sendTo: string | undefined, callback: Callback<unknown>): void;
+    sendSalesReceiptPdf(id: string, sendTo: string | undefined, callback: Callback<unknown>): void;
+
     // Update methods
     updateJournalEntry(journalEntry: object, callback: Callback<unknown>): void;
     updateBill(bill: object, callback: Callback<unknown>): void;

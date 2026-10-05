@@ -321,10 +321,12 @@ QBO_INLINE_OUTPUT=true
 | `create_sales_receipt` | Create a sales receipt with item lines |
 | `get_sales_receipt` | Fetch a sales receipt by ID |
 | `edit_sales_receipt` | Modify an existing sales receipt |
+| `send_sales_receipt` | Email a sales receipt PDF to the customer (draft preview by default) |
 | **Invoices** | |
 | `create_invoice` | Create an invoice with item lines (customer required); supports `global_tax_calculation` (TaxInclusive/TaxExcluded/NotApplicable) |
 | `get_invoice` | Fetch an invoice by ID |
 | `edit_invoice` | Modify an existing invoice; supports `global_tax_calculation` (TaxInclusive/TaxExcluded/NotApplicable) |
+| `send_invoice` | Email an invoice PDF to the customer (draft preview by default) |
 | **Deposits** | |
 | `create_deposit` | Create a bank deposit |
 | `get_deposit` | Fetch a deposit by ID |
